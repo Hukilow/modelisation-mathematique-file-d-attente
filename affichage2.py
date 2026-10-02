@@ -5,7 +5,7 @@ import pandas as pd
 import plotly.express as px
 from simulation import simul_evenement_MMc_new, simul_evenement_MDc_new
 import time
-from fonctions_aides import mm1_theorique, mmc_theorique, md1_theorique, L_moyen_temporel, rho_temps_reel,Lq_moyen_temporel, W_moyen_temporel, Wq_moyen_temporel, moyenne_clients_par_heure, poisson_probabilite_heure, somme_poisson_probabilite
+from fonctions_aides import mm1_theorique, mmc_theorique, md1_theorique, L_moyen_temporel, rho_temps_reel,Lq_moyen_temporel, W_moyen_temporel, Wq_moyen_temporel, moyenne_clients_par_heure, poisson_probabilite_heure, somme_poisson_probabilite, moyenne_poisson_probabilite
 
 st.title("Les files d'attente")
 
@@ -365,7 +365,7 @@ if st.button("Lancer la simulation"):
     with col8:
         LqMoyenCol = st.empty()
 
-    SommeProbaPoisson, pOccupationCol = st.columns(2)
+    SommeProbaPoisson, MoyenneProbaPoisson, pOccupationCol = st.columns(3)
     
     LclientMoyenDansSysteme.metric(
                     "L moyen (temporel)",
@@ -392,6 +392,11 @@ if st.button("Lancer la simulation"):
             "Somme des probabilités de Poisson",
             f"{somme_poisson_probabilite(data[0]):.2f}"
     )
+
+    MoyenneProbaPoisson.metric(
+            "Probabilité moyenne par heure",
+            f"{moyenne_poisson_probabilite(data[0]):.2f}"
+        )
 
     if methode_affichage == "Instantanément":
 

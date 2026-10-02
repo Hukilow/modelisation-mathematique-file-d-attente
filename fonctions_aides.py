@@ -193,10 +193,9 @@ def moyenne_clients_par_heure(data):
 # # Prend en entrée les données de la simulation et l'heure précise
 # # Retourne la probabilité que le nombre de clients arrivant dans la file selon cette heure précise soit arrivé
 # # ---------------------
-def poisson_probabilite_heure(data, heure):
+def poisson_probabilite_heure(data, heure, moy_clients_par_heure):
     if len(data) < 2:
         return 0
-    moy_clients_par_heure = moyenne_clients_par_heure(data)
     # Calcul du nombre de clients arrivant dans la file selon l'heure précise
     k = sum(
         1
@@ -206,19 +205,30 @@ def poisson_probabilite_heure(data, heure):
     probabilite = (math.exp(-moy_clients_par_heure) * ((moy_clients_par_heure ** k)) / math.factorial(k))
     return probabilite
 
-# vérif si la fonction est bonne là
-
 # #Fonction pour calculer la somme des probabilités d'un nombre de clients arrivant dans la file selon une heure précise
 # # ---------------------
 # # Prend en entrée les données de la simulation
 # # Retourne la somme des probabilités que le nombre de clients arrivant dans la file selon une heure précise soit arrivé
 # # ---------------------
-
 def somme_poisson_probabilite(data):
     if len(data) < 2:
         return 0
     somme_probabilite = 0
-    for heure in range(24):
-        somme_probabilite += poisson_probabilite_heure(data, heure)
+    derniere_heure = int(data[-1][0] // 60)
+    moy_clients_par_heure = moyenne_clients_par_heure(data)
+    for heure in range(derniere_heure + 1):
+        somme_probabilite += poisson_probabilite_heure(data, heure, moy_clients_par_heure)
     return somme_probabilite
+
+# #Fonction pour calculer la moyenne des probabilités d'un nombre de clients arrivant dans la file selon une heure précise
+# # ---------------------
+# # Prend en entrée les données de la simulation
+# # Retourne la moyenne des probabilités que le nombre de clients arrivant dans la file selon une heure précise soit arrivé
+# # ---------------------
+def moyenne_poisson_probabilite(data):
+    if len(data) < 2:
+        return 0
+    derniere_heure = int(data[-1][0] // 60)
+    nombre_heures = derniere_heure + 1
+    return somme_poisson_probabilite(data) / nombre_heures
 

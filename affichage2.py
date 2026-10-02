@@ -79,7 +79,7 @@ lambd = st.sidebar.slider(
     min_value=1.0,
     max_value=30.0,
     value=18.0,
-    step=1
+    step=1.0
 )
 
 # Slider pour le taux de service (mu)
@@ -88,7 +88,7 @@ lambd = st.sidebar.slider(
     min_value=2.0,
     max_value=40.0,
     value=20.0,
-    step=1
+    step=1.0
 )
 
 st.sidebar.header("Modèle et paramètres")

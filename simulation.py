@@ -301,3 +301,6 @@ def simul_evenement_MDc_new(taux_vitesse_agent,client_max_simul,taux_evenement,c
     return (result,liste_clients)
 
 
+data = simul_evenement_MMc_new(60/20,15,60/18,2,0)
+
+print(data)

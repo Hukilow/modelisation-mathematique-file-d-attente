@@ -5,3 +5,11 @@ __pycache__/
 # Virtual environment
 .venv/
 venv/
+
+# Build and distribution directories
+build/
+dist/
+Simulation/
+*.egg-info/
+_internal/
+Simulation.exe

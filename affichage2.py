@@ -5,7 +5,7 @@ import pandas as pd
 import plotly.express as px
 from simulation import simul_evenement_MMc_new, simul_evenement_MDc_new
 import time
-from fonctions_aides import mm1_theorique, mmc_theorique, md1_theorique, L_moyen_temporel, rho_temps_reel,Lq_moyen_temporel, W_moyen_temporel, Wq_moyen_temporel
+from fonctions_aides import mm1_theorique, mmc_theorique, md1_theorique, L_moyen_temporel, rho_temps_reel,Lq_moyen_temporel, W_moyen_temporel, Wq_moyen_temporel, moyenne_clients_par_heure, poisson_probabilite_heure, somme_poisson_probabilite
 
 st.title("Les files d'attente")
 
@@ -60,15 +60,26 @@ if methode_affichage == "Animation graphique":
         step=1
     )
 
-
-# Input pour le seed de la génération aléatoire
-seed = st.sidebar.number_input(
-    "Seed pour la génération aléatoire",
-    min_value=0,
-    max_value=1000000,
-    value=43747,
-    step=1
+# Dropdown list pour choisir seed aléatoire ou non
+choix_seed = st.sidebar.selectbox(
+    "Seed",
+    [
+        "Aléatoire",
+        "Manuel"
+    ]
 )
+
+if choix_seed == "Aléatoire":
+    seed = np.random.randint(0, 1000000)
+    st.sidebar.write(f"Seed aléatoire : {seed}")
+else :
+    seed = st.sidebar.number_input(
+        "Seed pour la génération aléatoire",
+        min_value=0,
+        max_value=1000000,
+        value=43747,
+        step=1
+    )
 
 
 st.sidebar.header("Paramètres théorique")
@@ -354,6 +365,7 @@ if st.button("Lancer la simulation"):
     with col8:
         LqMoyenCol = st.empty()
 
+    SommeProbaPoisson, pOccupationCol = st.columns(2)
     
     LclientMoyenDansSysteme.metric(
                     "L moyen (temporel)",
@@ -376,11 +388,15 @@ if st.button("Lancer la simulation"):
                     f"{Wq_moyen_temporel(data[1], len(data[1])-1):.2f} min"
                 )
 
-
+    SommeProbaPoisson.metric(
+            "Somme des probabilités de Poisson",
+            f"{somme_poisson_probabilite(data[0]):.2f}"
+    )
 
     if methode_affichage == "Instantanément":
 
-        pOccupationColInstant = st.columns(1)[0]
+        
+
 
         if modele == "Exponentiel — M/M/1" :
             valeur_rho_temps_reel = rho_temps_reel(data[0], len(data[0])-1, 1)
@@ -390,7 +406,7 @@ if st.button("Lancer la simulation"):
             valeur_rho_temps_reel = rho_temps_reel(data[0], len(data[0])-1, 1)
 
         
-        pOccupationColInstant.metric(
+        pOccupationCol.metric(
             "Occupation ρ",
             f"{valeur_rho_temps_reel * 100:.1f} %"
         )

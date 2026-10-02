@@ -176,3 +176,49 @@ def Wq_moyen_temporel(data, p):
 
 
 
+# #Fonction pour calculer le nombre moyen de clients arrivant dans la file par heures
+# # ---------------------
+# # Prend en entrée les données de la simulation
+# # Retourne le nombre moyen de clients arrivant dans la file par heures pour toutes la durée de la simulation
+# # ---------------------
+def moyenne_clients_par_heure(data):
+    if len(data) < 2:
+        return 0
+    duree_totale = data[-1][0] - data[0][0]
+    nombre_clients = sum(1 for event in data if event[2] == "add")
+    return (nombre_clients / duree_totale) * 60 if duree_totale > 0 else 0
+
+# #Fonction pour calculer la probalité d'un nombre de clients arrivant dans la file selon une heure précise
+# # ---------------------
+# # Prend en entrée les données de la simulation et l'heure précise
+# # Retourne la probabilité que le nombre de clients arrivant dans la file selon cette heure précise soit arrivé
+# # ---------------------
+def poisson_probabilite_heure(data, heure):
+    if len(data) < 2:
+        return 0
+    moy_clients_par_heure = moyenne_clients_par_heure(data)
+    # Calcul du nombre de clients arrivant dans la file selon l'heure précise
+    k = sum(
+        1
+    for event in data
+    if event[2] == "add" and event[0] // 60 == heure)
+    # Calcul de la proba selon la loi de Poisson
+    probabilite = (math.exp(-moy_clients_par_heure) * ((moy_clients_par_heure ** k)) / math.factorial(k))
+    return probabilite
+
+# vérif si la fonction est bonne là
+
+# #Fonction pour calculer la somme des probabilités d'un nombre de clients arrivant dans la file selon une heure précise
+# # ---------------------
+# # Prend en entrée les données de la simulation
+# # Retourne la somme des probabilités que le nombre de clients arrivant dans la file selon une heure précise soit arrivé
+# # ---------------------
+
+def somme_poisson_probabilite(data):
+    if len(data) < 2:
+        return 0
+    somme_probabilite = 0
+    for heure in range(24):
+        somme_probabilite += poisson_probabilite_heure(data, heure)
+    return somme_probabilite
+

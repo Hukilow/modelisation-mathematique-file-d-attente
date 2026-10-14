@@ -205,10 +205,10 @@ def poisson_probabilite_heure(data, heure, moy_clients_par_heure):
     probabilite = (math.exp(-moy_clients_par_heure) * ((moy_clients_par_heure ** k)) / math.factorial(k))
     return probabilite
 
-# #Fonction pour calculer la somme des probabilités d'un nombre de clients arrivant dans la file selon une heure précise
+# #Fonction pour calculer la somme des probabilités d'un nombre de clients arrivant dans la file 
 # # ---------------------
 # # Prend en entrée les données de la simulation
-# # Retourne la somme des probabilités que le nombre de clients arrivant dans la file selon une heure précise soit arrivé
+# # Retourne la somme des probabilités que le nombre de clients arrivant dans la file soit arrivé
 # # ---------------------
 def somme_poisson_probabilite(data):
     if len(data) < 2:
@@ -218,7 +218,7 @@ def somme_poisson_probabilite(data):
     moy_clients_par_heure = moyenne_clients_par_heure(data)
     for heure in range(derniere_heure + 1):
         somme_probabilite += poisson_probabilite_heure(data, heure, moy_clients_par_heure)
-    return somme_probabilite
+    return somme_probabilite 
 
 # #Fonction pour calculer la moyenne des probabilités d'un nombre de clients arrivant dans la file selon une heure précise
 # # ---------------------

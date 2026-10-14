@@ -26,8 +26,8 @@ methode_affichage = st.sidebar.selectbox(
     "Type de service",
     [
         "Animation graphique",
-        "Instantanément"
-        ""
+        "Instantanément",
+        "Comparaison efficacité"
     ]
 )
 
@@ -101,6 +101,25 @@ lambd = st.sidebar.slider(
     value=20.0,
     step=1.0
 )
+
+if methode_affichage == "Comparaison efficacité":
+    µ2 = st.sidebar.slider(
+        "Taux de service μ2 (clients/heure)",
+        min_value=2.0,
+        max_value=40.0,
+        value=25.0,
+        step=1.0
+    )
+
+    st.sidebar.header("Comparaison efficacité")
+    # Slider pour le nombre de simulation à comparer
+    nbr_simulation = st.sidebar.slider(
+        "Nombre de simulation à comparer",
+        min_value=1,
+        max_value=10,
+        value=5,
+        step=1
+    )
 
 st.sidebar.header("Modèle et paramètres")
 
@@ -176,14 +195,41 @@ if st.button("Lancer la simulation"):
                 data = simul_evenement_MMc_new(vitesse_agent, nombre_client, taux_evenement, 1, seed)
                 theorique = mm1_theorique(lambd, µ)
                 c = 1
+                if methode_affichage == "Comparaison efficacité":
+                    dataTab = []
+                    theorique2 = mm1_theorique(lambd, µ2)
+                    for i in range(nbr_simulation):
+                        seed_i = np.random.randint(0, 1000000)
+                        data_i = simul_evenement_MMc_new(vitesse_agent, nombre_client, taux_evenement, 1, seed_i)
+                        dataTab.append(data_i)
+                        data_n = simul_evenement_MMc_new(60 / µ2, nombre_client, taux_evenement, 1, seed_i)
+                        dataTab.append(data_n)
             case "Exponentiel — M/M/c":
                 data = simul_evenement_MMc_new(vitesse_agent, nombre_client, taux_evenement, c, seed)
                 theorique = mmc_theorique(lambd, µ, c)
                 c = c
+                if methode_affichage == "Comparaison efficacité":
+                    dataTab = []
+                    theorique2 = mmc_theorique(lambd, µ2, c)
+                    for i in range(nbr_simulation):
+                        seed_i = np.random.randint(0, 1000000)
+                        data_i = simul_evenement_MMc_new(vitesse_agent, nombre_client, taux_evenement, c, seed_i)
+                        dataTab.append(data_i)
+                        data_n = simul_evenement_MMc_new(60 / µ2, nombre_client, taux_evenement, c, seed_i)
+                        dataTab.append(data_n)
             case "Déterministe — M/D/1":
                 data = simul_evenement_MDc_new(vitesse_agent, nombre_client, taux_evenement, 1, seed)
                 theorique = md1_theorique(lambd, µ)
                 c = 1
+                if methode_affichage == "Comparaison efficacité":
+                    dataTab = []
+                    theorique2 = md1_theorique(lambd, µ2)
+                    for i in range(nbr_simulation):
+                        seed_i = np.random.randint(0, 1000000)
+                        data_i = simul_evenement_MDc_new(vitesse_agent, nombre_client, taux_evenement, 1, seed_i)
+                        dataTab.append(data_i)
+                        data_n = simul_evenement_MDc_new(60 / µ2, nombre_client, taux_evenement, 1, seed_i)
+                        dataTab.append(data_n)
 
 
     if theorique == float("inf"):
@@ -193,10 +239,11 @@ if st.button("Lancer la simulation"):
         # Affichage des valeurs théoriques
 
         st.write(f"### Paramètres théoriques")
+        if methode_affichage == "Comparaison efficacité":
+            st.write(f"## valeur théorique de µ1 = {µ}")
         col9, col10, col11 = st.columns(3)
         col12, col13, col14 = st.columns(3)
-
-
+        
         col9.metric(
             "Taux d'occupation ρ",
             f"{theorique['rho'] * 100:.1f} %"
@@ -221,6 +268,36 @@ if st.button("Lancer la simulation"):
             "Temps moyen dans le système W",
             f"{theorique['W'] * 60:.1f} min"
         )
+
+        if methode_affichage == "Comparaison efficacité":
+            st.write(f"## valeur théorique de µ2 = {µ2}")
+            col15, col16, col17 = st.columns(3)
+            col18, col19, col20 = st.columns(3)
+
+            col15.metric(
+                "Taux d'occupation ρ",
+                f"{theorique2['rho'] * 100:.1f} %"
+            )
+            col16.metric(
+                "P attente",
+                f"{theorique2['P_attente'] * 100:.1f} %"
+            )
+            col17.metric(
+                "Nbr moy de clients dans système L",
+                f"{theorique2['L']:.2f}"
+            )
+            col18.metric(
+                "Nbr moy de clients dans la file Lq",
+                f"{theorique2['Lq']:.2f}"
+            )
+            col19.metric(
+                "Attente moyenne Wq",
+                f"{theorique2['Wq'] * 60:.1f} min"
+            )
+            col20.metric(
+                "Temps moyen dans le système W",
+                f"{theorique2['W'] * 60:.1f} min"
+            )
 
     # Affichage des valeurs en temps réel pendant la simulation
     client_traité = 0
@@ -352,6 +429,9 @@ if st.button("Lancer la simulation"):
 
     # Data de fin sur la simulation
     st.write(f"### Fin de simulation")
+    if methode_affichage == "Comparaison efficacité":
+        st.write(f"## valeur simulation (moyenne des simulations) de µ1 = {µ}")
+
     col5, col6, col7, col8 = st.columns(4)
     with col5:
         LclientMoyenDansSysteme = st.empty()
@@ -366,42 +446,113 @@ if st.button("Lancer la simulation"):
         LqMoyenCol = st.empty()
 
     SommeProbaPoisson, MoyenneProbaPoisson, pOccupationCol = st.columns(3)
-    
-    LclientMoyenDansSysteme.metric(
-                    "L moyen (temporel)",
-                    f"{L_moyen_temporel(data[0], len(data[0])-1):.2f}"
-                )
-    
 
-    LqMoyenCol.metric(
-                    "Lq moyen (temporel)",
-                    f"{Lq_moyen_temporel(data[0], len(data[0])-1,c):.2f}"
-                )
+    if methode_affichage == "Comparaison efficacité":
+        # On sépare les simulations en deux groupes : celles avec µ1 et celles avec µ2
+        simulations_mu1 = dataTab[0::2]
+        simulations_mu2 = dataTab[1::2]
 
-    WmoyenCol.metric(
-                    "W moyen (temporel)",
-                    f"{W_moyen_temporel(data[1], len(data[1])-1):.2f} min"
-                )
+        def moyennes_simulations(simulations):
+            return {
+                "L": np.mean([
+                    L_moyen_temporel(simulation[0], len(simulation[0]) - 1)
+                    for simulation in simulations
+                ]),
+                "Lq": np.mean([
+                    Lq_moyen_temporel(simulation[0], len(simulation[0]) - 1, c)
+                    for simulation in simulations
+                ]),
+                "W": np.mean([
+                    W_moyen_temporel(simulation[1], len(simulation[1]) - 1)
+                    for simulation in simulations
+                ]),
+                "Wq": np.mean([
+                    Wq_moyen_temporel(simulation[1], len(simulation[1]) - 1)
+                    for simulation in simulations
+                ]),
+                "SP" : np.mean([
+                    somme_poisson_probabilite(simulation[0])
+                    for simulation in simulations
+                ]),
+                "MP" : np.mean([
+                    moyenne_poisson_probabilite(simulation[0])
+                    for simulation in simulations
+                ]),
+                "RHO" : np.mean([
+                    rho_temps_reel(simulation[0], len(simulation[0])-1, 1)
+                    for simulation in simulations
+                ])
+            }
 
-    WqMoyenCol.metric(
-                    "Wq moyen (temporel)",
-                    f"{Wq_moyen_temporel(data[1], len(data[1])-1):.2f} min"
-                )
+        moyennes_mu1 = moyennes_simulations(simulations_mu1)
+        moyennes_mu2 = moyennes_simulations(simulations_mu2)
 
-    SommeProbaPoisson.metric(
-            "Somme des probabilités de Poisson",
-            f"{somme_poisson_probabilite(data[0]):.2f}"
-    )
+        LclientMoyenDansSysteme.metric(
+                        "L moyen (temporel)",
+                        f"{moyennes_mu1['L']:.2f}"
+                    )
 
-    MoyenneProbaPoisson.metric(
-            "Probabilité moyenne par heure",
-            f"{moyenne_poisson_probabilite(data[0]):.2f}"
+        LqMoyenCol.metric(
+                        "Lq moyen (temporel)",
+                        f"{moyennes_mu1['Lq']:.2f}"
+                    )
+
+        WmoyenCol.metric(
+                        "W moyen (temporel)",
+                        f"{moyennes_mu1['W']:.2f} min"
+                    )
+
+        WqMoyenCol.metric(
+                        "Wq moyen (temporel)",
+                        f"{moyennes_mu1['Wq']:.2f} min"
+                    )
+
+        SommeProbaPoisson.metric(
+                    "Somme des probabilités de Poisson",
+                    f"{moyennes_mu1['SP']:.2f}"
+            )
+
+        MoyenneProbaPoisson.metric(
+                    "Probabilité moyenne par heure",
+                    f"{moyennes_mu1['MP']:.2f}"
+            )
+
+        pOccupationCol.metric(
+                "Occupation ρ",
+                f"{moyennes_mu1['RHO'] * 100:.1f} %"
+            )
+    else :
+        LclientMoyenDansSysteme.metric(
+                        "L moyen (temporel)",
+                        f"{L_moyen_temporel(data[0], len(data[0])-1):.2f}"
+                    )
+
+        LqMoyenCol.metric(
+                        "Lq moyen (temporel)",
+                        f"{Lq_moyen_temporel(data[0], len(data[0])-1,c):.2f}"
+                    )
+
+        WmoyenCol.metric(
+                        "W moyen (temporel)",
+                        f"{W_moyen_temporel(data[1], len(data[1])-1):.2f} min"
+                    )
+
+        WqMoyenCol.metric(
+                        "Wq moyen (temporel)",
+                        f"{Wq_moyen_temporel(data[1], len(data[1])-1):.2f} min"
+                    )
+
+        SommeProbaPoisson.metric(
+                "Somme des probabilités de Poisson",
+                f"{somme_poisson_probabilite(data[0]):.2f}"
         )
 
+        MoyenneProbaPoisson.metric(
+                "Probabilité moyenne par heure",
+                f"{moyenne_poisson_probabilite(data[0]):.2f}"
+            )
+
     if methode_affichage == "Instantanément":
-
-        
-
 
         if modele == "Exponentiel — M/M/1" :
             valeur_rho_temps_reel = rho_temps_reel(data[0], len(data[0])-1, 1)
@@ -415,6 +566,80 @@ if st.button("Lancer la simulation"):
             "Occupation ρ",
             f"{valeur_rho_temps_reel * 100:.1f} %"
         )
+
+    if methode_affichage == "Comparaison efficacité":
+        st.write(f"## valeur simulation (moyenne des simulations) de µ2 = {µ2}")
+
+        col21, col22, col23, col24 = st.columns(4)
+
+        with col21:
+            LclientMoyenDansSysteme = st.empty()
+    
+        with col22:
+            WmoyenCol = st.empty()
+    
+        with col23:
+            WqMoyenCol = st.empty()
+    
+        with col24:
+            LqMoyenCol = st.empty()
+    
+        SommeProbaPoisson, MoyenneProbaPoisson, pOccupationCol = st.columns(3)
+        
+        LclientMoyenDansSysteme.metric(
+                        "L moyen (temporel)",
+                        f"{moyennes_mu2['L']:.2f}"
+                    )
+        
+    
+        LqMoyenCol.metric(
+                        "Lq moyen (temporel)",
+                        f"{moyennes_mu2['Lq']:.2f}"
+                    )
+    
+        WmoyenCol.metric(
+                        "W moyen (temporel)",
+                        f"{moyennes_mu2['W']:.2f} min"
+                    )
+    
+        WqMoyenCol.metric(
+                        "Wq moyen (temporel)",
+                        f"{moyennes_mu2['Wq']:.2f} min"
+                    )
+
+        SommeProbaPoisson.metric(
+                    "Somme des probabilités de Poisson",
+                    f"{moyennes_mu2['SP']:.2f}"
+            )
+
+        MoyenneProbaPoisson.metric(
+                    "Probabilité moyenne par heure",
+                    f"{moyennes_mu2['MP']:.2f}"
+                )
+
+        pOccupationCol.metric(
+                    "Occupation ρ",
+                    f"{moyennes_mu2['RHO'] * 100:.1f} %"
+                )
+
+        st.write("### Gain de temps dans la file d'attente")
+        gain_wq = moyennes_mu1["Wq"] - moyennes_mu2["Wq"]
+        comparaison_col1, comparaison_col2, comparaison_col3 = st.columns(3)
+
+        comparaison_col1.metric(
+            "Wq moyen avec µ1",
+            f"{moyennes_mu1['Wq']:.2f} min"
+        )
+        comparaison_col2.metric(
+            "Wq moyen avec µ2",
+            f"{moyennes_mu2['Wq']:.2f} min"
+        )
+        comparaison_col3.metric(
+            "Temps gagné avec µ2",
+            f"{gain_wq:.2f} min",
+        )
+
+
 
 
 

@@ -566,6 +566,29 @@ if st.button("Lancer la simulation"):
             "Occupation ρ",
             f"{valeur_rho_temps_reel * 100:.1f} %"
         )
+    if methode_affichage != "Comparaison efficacité":
+        st.write("### Graphique de vérification de la loi de Poisson")
+        # On affiche un graphique pour vérifier que la loi de Poisson est respectée 
+        # Ce graphique montre la convergence de la moyenne des proba en fonction de l'avancé de l'heure
+
+        derniere_heure = int(data[0][-1][0] // 60)
+        moyenne_clients_heure = moyenne_clients_par_heure(data[0])
+        heures = list(range(derniere_heure + 1))
+        probabilite_par_heure = [
+            poisson_probabilite_heure(data[0], x, moyenne_clients_heure)
+            for x in heures
+        ]
+        moyenne_probabilite_par_heure = [
+            np.mean(probabilite_par_heure[:x + 1])
+            for x in heures
+        ]
+        print(moyenne_probabilite_par_heure)
+        print(heures)
+        df = pd.DataFrame({
+            "Heure": heures,
+            "Moyenne des probabilités": moyenne_probabilite_par_heure
+        })
+        st.area_chart(df, x="Heure", y="Moyenne des probabilités")
 
     if methode_affichage == "Comparaison efficacité":
         st.write(f"## valeur simulation (moyenne des simulations) de µ2 = {µ2}")
@@ -638,9 +661,3 @@ if st.button("Lancer la simulation"):
             "Temps gagné avec µ2",
             f"{gain_wq:.2f} min",
         )
-
-
-
-
-
-
